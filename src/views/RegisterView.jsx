@@ -3,11 +3,19 @@ import "../components/components.css";
 import { useNavigate } from "react-router-dom";
 import Nav from "../components/Header";
 import { useUserContext } from "../contexts/UserContext";
+import {
+  createUserWithEmailAndPassword,
+  updateProfile,
+  signInWithPopup,
+  GoogleAuthProvider,
+} from "firebase/auth";
+import { auth } from "../firebase";
 import { useState } from "react";
 
 function RegisterView() {
   const navigate = useNavigate();
   const { updateUser, toggleLogin, genreList, updateGenre } = useUserContext();
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -16,6 +24,7 @@ function RegisterView() {
     pass1: "",
     pass2: "",
   });
+
   const [selectedGenres, setSelectedGenres] = useState(
     genreList.filter((genre) => genre.selected).map((genre) => genre.id)
   );
@@ -36,7 +45,7 @@ function RegisterView() {
     );
   };
 
-  function handleSignIn(event) {
+  async function emailSignIn(event) {
     event.preventDefault();
     const { firstName, lastName, username, email, pass1, pass2 } = formData;
     let allFieldsFilled = true;
@@ -52,11 +61,15 @@ function RegisterView() {
     }
 
     if (allFieldsFilled) {
-      updateUser("firstName", firstName);
-      updateUser("lastName", lastName);
-      updateUser("username", username);
-      updateUser("email", email);
-      updateUser("pass", pass1);
+      try {
+        const user = await createUserWithEmailAndPassword(auth, email, password)
+          .user;
+        await updateProfile(user, { displayName: `${firstName} ${lastName}` });
+        setUser(user);
+        navigate("./");
+      } catch (error) {
+        console.error("Error creating user:", error);
+      }
 
       genreList.forEach((genre) => {
         const isSelected = selectedGenres.includes(genre.id);
@@ -64,11 +77,18 @@ function RegisterView() {
           updateGenre(genre);
         }
       });
-
-      toggleLogin(true);
-      navigate("../");
     }
   }
+
+  const googleSignIn = async () => {
+    try {
+      const user = (await signInWithPopup(auth, new GoogleAuthProvider())).user;
+      setUser(user);
+      navigate("./");
+    } catch (error) {
+      console.error("Error signing in with Google:", error);
+    }
+  };
 
   return (
     <>
@@ -79,7 +99,7 @@ function RegisterView() {
           <p>Enjoy unlimited movies and TV shows. Cancel anytime.</p>
         </div>
 
-        <form className="register-form" onSubmit={handleSignIn}>
+        <form className="register-form" onSubmit={emailSignIn}>
           <div className="form-group">
             <input
               type="text"
@@ -163,6 +183,14 @@ function RegisterView() {
             Already have an account?{" "}
             <span onClick={() => navigate("/Login")}>Sign In</span>
           </p>
+
+          <button
+            type="button"
+            className="google-signin-button"
+            onClick={googleSignIn}
+          >
+            Sign in with Google
+          </button>
         </form>
       </div>
     </>

@@ -142,3 +142,19 @@ button:hover {
     padding: 20px;
   }
 }
+
+.google-signin-button {
+  background-color: #4285F4;
+  color: white;
+  font-size: 16px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.google-signin-button:hover {
+  background-color: #357ae8;
+}
